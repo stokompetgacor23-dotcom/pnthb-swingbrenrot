@@ -1,7 +1,7 @@
 repeat task.wait() until game:IsLoaded()
 
 -- =======================================================
--- PINATHUB | SWING OBBY FOR BRAINROTS
+-- PINATHUB | SWING OBBY FOR BRAINROTS (WindUI v2)
 -- =======================================================
 
 -- ============================================
@@ -44,7 +44,7 @@ local function createHidePart()
         hidePart:Destroy()
         hidePart = nil
     end
-    
+
     local part = Instance.new("Part")
     part.Name = "PinatHubHideZone"
     part.Size = Vector3.new(10, 10, 10)
@@ -53,7 +53,7 @@ local function createHidePart()
     part.CanCollide = false
     part.Transparency = 1
     part.Parent = workspace
-    
+
     hidePart = part
     return part
 end
@@ -63,11 +63,11 @@ local function teleportToHidePart()
         createHidePart()
         task.wait(0.1)
     end
-    
+
     if hidePart then
         humanoidRootPart.CFrame = hidePart.CFrame + Vector3.new(0, 3, 0)
-        if window then
-            window:Notify("Hide Zone", "Teleported to safe zone!", 2)
+        if Window then
+            Window:Notify("Hide Zone", "Teleported to safe zone!", 2)
         end
         return true
     end
@@ -134,44 +134,48 @@ UIS.InputChanged:Connect(function(input)
 end)
 
 -- ============================================
--- LOAD WINDUI
+-- LOAD WINDUI (NEW VERSION)
 -- ============================================
-local WindUI = loadstring(game:HttpGet('https://github.com/Footagesus/WindUI/releases/latest/download/main.lua'))()
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
-local window = WindUI:CreateWindow({
+local Window = WindUI:CreateWindow({
     Title = "PinatHub",
     Author = "@viunze on tiktok",
     Folder = "pinathub",
-    Size = UDim2.fromOffset(600, 600),
-    Transparent = false,
+    Size = UDim2.fromOffset(500, 350),
+    Transparent = true,
     Theme = "Dark",
     IsOpenButtonEnabled = false,
-    User = {Enabled = true, Anonymous = true},
+    UserEnabled = true,
+    HasOutline = true,
     SideBarWidth = 150,
 })
 
+-- Logo button toggle open/close UI
 local guiVisible = true
 logoButton.MouseButton1Click:Connect(function()
     guiVisible = not guiVisible
-    if window then
+    if Window then
         pcall(function()
             if guiVisible then
-                window:Open()
+                Window:Open()
             else
-                window:Minimize()
+                Window:Minimize()
             end
         end)
     end
 end)
 
--- Create Tabs
-local tabs = {
-    farm = window:Tab({Title = "Farm", Icon = "bot"}),
-    upgrades = window:Tab({Title = "Upgrades", Icon = "dollar-sign"}),
-    automation = window:Tab({Title = "Automation", Icon = "folder-cog"}),
-    random = window:Tab({Title = "Random", Icon = "box"}),
-    settings = window:Tab({Title = "Settings", Icon = "cog"}),
-    community = window:Tab({Title = "Community", Icon = "users"}),
+-- ============================================
+-- CREATE TABS
+-- ============================================
+local Tabs = {
+    FarmTab = Window:Tab({ Title = "Farm", Icon = "bot" }),
+    UpgradesTab = Window:Tab({ Title = "Upgrades", Icon = "dollar-sign" }),
+    AutomationTab = Window:Tab({ Title = "Automation", Icon = "folder-cog" }),
+    RandomTab = Window:Tab({ Title = "Random", Icon = "box" }),
+    SettingsTab = Window:Tab({ Title = "Settings", Icon = "cog" }),
+    CommunityTab = Window:Tab({ Title = "Community", Icon = "users" }),
 }
 
 -- ============================================
@@ -232,16 +236,14 @@ local function getBestBrainrot()
     local bestPart = nil
     local bestModel = nil
     local bestValue = 0
-    
+
     local activeBrainrots = workspace:FindFirstChild("ActiveBrainrots")
     if not activeBrainrots then return nil, nil end
-    
+
     for _, part in pairs(activeBrainrots:GetChildren()) do
         if part:IsA("BasePart") then
             local model = part:FindFirstChildOfClass("Model")
-            if not model then
-                -- skip this iteration
-            else
+            if model then
                 local success, data = pcall(function()
                     local frame = model.LevelBoard.Frame
                     return {
@@ -251,18 +253,18 @@ local function getBestBrainrot()
                         level = frame.Level.Text
                     }
                 end)
-                
+
                 if success and data then
                     local shouldSkip = false
-                    
+
                     if excludedRarities[data.rarity] then
                         shouldSkip = true
                     end
-                    
+
                     if excludedRanks[data.rank] then
                         shouldSkip = true
                     end
-                    
+
                     if not shouldSkip then
                         local levelNumber = tonumber(string.match(data.level, "%d+")) or 0
                         if levelNumber > levelLimit then
@@ -278,7 +280,7 @@ local function getBestBrainrot()
             end
         end
     end
-    
+
     return bestPart, bestModel
 end
 
@@ -291,13 +293,13 @@ end
 local function processBrainrot()
     local part, model = getBestBrainrot()
     if not part or not model then return end
-    
+
     local hrp = model:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    
+
     teleportToPosition(hrp.CFrame + Vector3.new(0, 3, 0))
     task.wait(0.3)
-    
+
     local attachment = part:FindFirstChild("Attachment")
     if attachment then
         local prompt = attachment:FindFirstChildOfClass("ProximityPrompt")
@@ -305,7 +307,7 @@ local function processBrainrot()
             fireproximityprompt(prompt)
         end
     end
-    
+
     task.wait(0.3)
     teleportToHidePart()
 end
@@ -317,7 +319,7 @@ end
 local function doUpgrade()
     if busy then return end
     busy = true
-    
+
     if upgradeRemote then
         if selectedUpgrades["Power"] then
             pcall(function()
@@ -335,7 +337,7 @@ local function doUpgrade()
             end)
         end
     end
-    
+
     busy = false
 end
 
@@ -347,7 +349,7 @@ local function getMyPlot()
     local myName = string.upper(player.Name)
     local plots = workspace:FindFirstChild("Plots")
     if not plots then return nil end
-    
+
     for i = 1, 5 do
         local plot = plots:FindFirstChild("Plot"..i)
         if plot then
@@ -381,7 +383,7 @@ end
 local function processPodUpgrade()
     if busy then return end
     busy = true
-    
+
     local plot = getMyPlot()
     if plot then
         local pods = plot:FindFirstChild("Pods")
@@ -400,7 +402,7 @@ local function processPodUpgrade()
             end
         end
     end
-    
+
     busy = false
 end
 
@@ -511,7 +513,7 @@ local function processCollect()
             local startPart = plot.MainSign.ScreenFrame
             moveToCollect(startPart.CFrame + Vector3.new(0, 3, 0))
             task.wait(0.5)
-            
+
             local pods = plot:FindFirstChild("Pods")
             if pods then
                 for i = 1, 40 do
@@ -572,11 +574,10 @@ local function autoRebirthLoop()
 end
 
 -- ============================================
--- UI SECTIONS
+-- FARM TAB UI
 -- ============================================
 
--- FARM TAB
-local farmSection = tabs.farm:Section({Title = "Brainrot Filter"})
+local farmSection = Tabs.FarmTab:Section({Title = "Brainrot Filter"})
 
 farmSection:Dropdown({
     Title = "Exclude Rarities",
@@ -617,8 +618,7 @@ farmSection:Divider()
 
 local farmToggle = farmSection:Toggle({
     Title = "Farm Brainrots",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         autoFarmRunning = state
         if state then
@@ -632,8 +632,11 @@ local farmToggle = farmSection:Toggle({
     end
 })
 
--- UPGRADES TAB
-local upgradeSection = tabs.upgrades:Section({Title = "Stat Upgrades"})
+-- ============================================
+-- UPGRADES TAB UI
+-- ============================================
+
+local upgradeSection = Tabs.UpgradesTab:Section({Title = "Stat Upgrades"})
 
 upgradeSection:Dropdown({
     Title = "Select Upgrades",
@@ -666,7 +669,7 @@ upgradeSection:Dropdown({
 
 upgradeSection:Slider({
     Title = "Upgrade Interval (seconds)",
-    Value = {Min = 0, Max = 5, Default = 1, Decimals = 1},
+    Value = {Min = 0, Max = 5, Default = 1},
     Callback = function(value)
         upgradeInterval = value
     end
@@ -674,8 +677,7 @@ upgradeSection:Slider({
 
 local upgradeToggle = upgradeSection:Toggle({
     Title = "Auto Upgrade Selected",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         autoUpgradeRunning = state
         if state then
@@ -703,8 +705,7 @@ upgradeSection:Input({
 
 local podUpgradeToggle = upgradeSection:Toggle({
     Title = "Auto Upgrade Brainrots",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         autoPodUpgradeRunning = state
         if state then
@@ -718,13 +719,15 @@ local podUpgradeToggle = upgradeSection:Toggle({
     end
 })
 
--- AUTOMATION TAB
-local automationSection = tabs.automation:Section({Title = "Automation"})
+-- ============================================
+-- AUTOMATION TAB UI
+-- ============================================
+
+local automationSection = Tabs.AutomationTab:Section({Title = "Automation"})
 
 local claimToggle = automationSection:Toggle({
     Title = "Auto Claim Index Rewards",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         autoClaimRunning = state
         if state then
@@ -735,8 +738,7 @@ local claimToggle = automationSection:Toggle({
 
 local rebirthToggle = automationSection:Toggle({
     Title = "Auto Rebirth",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         autoRebirthRunning = state
         if state then
@@ -759,8 +761,7 @@ automationSection:Dropdown({
 
 local collectToggle = automationSection:Toggle({
     Title = "Auto Collect Money",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         autoCollectRunning = state
         if state then
@@ -769,13 +770,15 @@ local collectToggle = automationSection:Toggle({
     end
 })
 
--- RANDOM TAB
-local randomSection = tabs.random:Section({Title = "Stat Modifiers"})
+-- ============================================
+-- RANDOM TAB UI
+-- ============================================
+
+local randomSection = Tabs.RandomTab:Section({Title = "Stat Modifiers"})
 
 local reachToggle = randomSection:Toggle({
     Title = "Inf Rope Reach",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         infReachEnabled = state
         if state then
@@ -789,7 +792,7 @@ local reachToggle = randomSection:Toggle({
 
 randomSection:Slider({
     Title = "Custom Power Value",
-    Value = {Min = 5, Max = 15000, Default = 10, Decimals = 1},
+    Value = {Min = 5, Max = 15000, Default = 10},
     Callback = function(value)
         customPowerValue = value
         if customPowerEnabled then
@@ -800,8 +803,7 @@ randomSection:Slider({
 
 local powerToggle = randomSection:Toggle({
     Title = "Enable Custom Power",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         customPowerEnabled = state
         if state then
@@ -821,17 +823,21 @@ randomSection:Button({
         local char = player.Character or player.CharacterAdded:Wait()
         local root = char:WaitForChild("HumanoidRootPart")
         root.CFrame = CFrame.new(21, -10, -34044)
-        window:Notify("Teleport", "Teleported to end!", 2)
+        Window:Notify("Teleport", "Teleported to end!", 2)
     end
 })
 
--- SETTINGS TAB
-local moveSection = tabs.settings:Section({Title = "Movement"})
+-- ============================================
+-- SETTINGS TAB UI
+-- ============================================
+
+-- Movement Section
+local moveSection = Tabs.SettingsTab:Section({Title = "Movement"})
 
 local walkSpeedValue = 16
 moveSection:Slider({
     Title = "Walk Speed (16-250)",
-    Value = {Min = 16, Max = 250, Default = 16, Decimals = 0},
+    Value = {Min = 16, Max = 250, Default = 16},
     Callback = function(value)
         walkSpeedValue = value
         if humanoid then humanoid.WalkSpeed = value end
@@ -841,7 +847,7 @@ moveSection:Slider({
 local jumpPowerValue = 50
 moveSection:Slider({
     Title = "Jump Power (0-500)",
-    Value = {Min = 0, Max = 500, Default = 50, Decimals = 0},
+    Value = {Min = 0, Max = 500, Default = 50},
     Callback = function(value)
         jumpPowerValue = value
         if humanoid then
@@ -854,8 +860,7 @@ moveSection:Slider({
 local infiniteJumpEnabled = false
 moveSection:Toggle({
     Title = "Infinite Jump",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(value)
         infiniteJumpEnabled = value
     end
@@ -876,20 +881,20 @@ moveSection:Button({
     Callback = function()
         if player.Character then
             player.Character:BreakJoints()
-            window:Notify("Reset", "Character reset!", 2)
+            Window:Notify("Reset", "Character reset!", 2)
         end
     end
 })
 
 moveSection:Divider()
 
-local serverSection = tabs.settings:Section({Title = "Server"})
+-- Server Section
+local serverSection = Tabs.SettingsTab:Section({Title = "Server"})
 
 local antiAFKActive = false
 serverSection:Toggle({
     Title = "Anti-AFK",
-    Type = "Checkbox",
-    Value = false,
+    Default = false,
     Callback = function(state)
         antiAFKActive = state
         if state then
@@ -912,7 +917,7 @@ serverSection:Button({
         local req = syn and syn.request or http_request or request or httprequest
         local servers = {}
         local placeId = game.PlaceId
-        
+
         if req then
             local cursor = ""
             for _ = 1, 3 do
@@ -932,13 +937,13 @@ serverSection:Button({
                 cursor = tostring(nextCursor)
             end
         end
-        
+
         if #servers > 0 then
             TeleportService:TeleportToPlaceInstance(placeId, servers[math.random(1, #servers)], player)
         else
             TeleportService:Teleport(placeId, player)
         end
-        window:Notify("Server Hop", "Joining new server...", 2)
+        Window:Notify("Server Hop", "Joining new server...", 2)
     end
 })
 
@@ -946,19 +951,22 @@ serverSection:Button({
     Title = "Rejoin Server",
     Callback = function()
         TeleportService:Teleport(game.PlaceId, player)
-        window:Notify("Rejoin", "Rejoining server...", 2)
+        Window:Notify("Rejoin", "Rejoining server...", 2)
     end
 })
 
--- COMMUNITY TAB
-local communitySection = tabs.community:Section({Title = "Join Community"})
+-- ============================================
+-- COMMUNITY TAB UI
+-- ============================================
+
+local communitySection = Tabs.CommunityTab:Section({Title = "Join Community"})
 
 communitySection:Button({
     Title = "WhatsApp Group",
     Callback = function()
         if set_clipboard then
             set_clipboard("https://chat.whatsapp.com/I8hG44FLgrRAwQcS3lvEft")
-            window:Notify("Copied!", "WhatsApp link copied!", 2)
+            Window:Notify("Copied!", "WhatsApp link copied!", 2)
         end
     end
 })
@@ -968,7 +976,7 @@ communitySection:Button({
     Callback = function()
         if set_clipboard then
             set_clipboard("https://discord.gg/eDbaHKEf7G")
-            window:Notify("Copied!", "Discord link copied!", 2)
+            Window:Notify("Copied!", "Discord link copied!", 2)
         end
     end
 })
@@ -978,12 +986,14 @@ communitySection:Button({
     Callback = function()
         if set_clipboard then
             set_clipboard("https://tiktok.com/@viunze")
-            window:Notify("Copied!", "TikTok profile copied!", 2)
+            Window:Notify("Copied!", "TikTok profile copied!", 2)
         end
     end
 })
 
--- Create initial hide part
+-- ============================================
+-- CREATE INITIAL HIDE PART
+-- ============================================
 createHidePart()
 
 -- ============================================
@@ -993,7 +1003,7 @@ player.CharacterAdded:Connect(function(char)
     character = char
     humanoid = char:WaitForChild("Humanoid")
     humanoidRootPart = char:WaitForChild("HumanoidRootPart")
-    
+
     task.wait(0.5)
     pcall(function()
         humanoid.WalkSpeed = walkSpeedValue
@@ -1006,5 +1016,4 @@ end)
 -- INITIAL NOTIFICATION
 -- ============================================
 task.wait(1)
-window:Notify("PinatHub", "Loaded!", 3)
-window:Open()
+Window:Notify("PinatHub", "Loaded successfully!", 3)
